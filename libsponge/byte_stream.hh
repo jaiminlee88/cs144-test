@@ -17,7 +17,12 @@ class ByteStream {
   private:
     // Your code here -- add private members as necessary.
 
-    bool _error{};  //!< Flag indicating that the stream suffered an error.
+    bool _error{false};  //!< Flag indicating that the stream suffered an error.
+    size_t _capacity;
+    size_t _read_bytes{0};
+    size_t _write_bytes{0};
+    bool _input_ended{false};
+    std::deque<char> _q;
 
   public:
     //! Construct a stream with room for `capacity` bytes.
