@@ -18,6 +18,7 @@ class StreamReassembler {
     size_t _next_index;
     size_t _eof_index;
     size_t _unassemble_cnt;
+    bool   _eof;
     std::map<size_t, std::string> _m;
 
     void merge_data(const std::string &data, size_t sindex, size_t eindex);
