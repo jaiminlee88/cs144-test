@@ -11,6 +11,9 @@ class WrappingInt32 {
     uint32_t _raw_value;  //!< The raw 32-bit stored integer
 
   public:
+    // stream   index         0     1     2     3...      X       ... Y    ~ 2^32-1
+    // absolute seq           1     2     3     4...      X+1     ... Y+1
+    // seqno         (SYN)ISN ISN+1 ISN+2 ISN+3 ISN+4...  ISN+X+1 ... ISN+Y+1(FIN)
     //! Construct from a raw 32-bit unsigned integer
     explicit WrappingInt32(uint32_t raw_value) : _raw_value(raw_value) {}
 

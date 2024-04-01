@@ -99,7 +99,7 @@ void StreamReassembler::merge_data(const string &data, size_t sindex, size_t ein
         return;
     }
 
-    string tmp = std::move(data);
+    string tmp = data;
     if (sindex < _next_index) {
         tmp.erase(tmp.begin(), tmp.begin() + (_next_index - sindex));
         sindex = _next_index;

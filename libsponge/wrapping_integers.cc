@@ -1,5 +1,6 @@
 #include "wrapping_integers.hh"
-
+#include <cmath>
+#include <iostream>
 // Dummy implementation of a 32-bit wrapping integer
 
 // For Lab 2, please replace with a real implementation that passes the
@@ -10,12 +11,16 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 
 using namespace std;
 
+    // stream   index         0     1     2     3...      X       ... Y    ~ 2^32-1
+    // absolute seq           1     2     3     4...      X+1     ... Y+1
+    // seqno         (SYN)ISN ISN+1 ISN+2 ISN+3 ISN+4...  ISN+X+1 ... ISN+Y+1(FIN)
 //! Transform an "absolute" 64-bit sequence number (zero-indexed) into a WrappingInt32
 //! \param n The input absolute 64-bit sequence number
 //! \param isn The initial sequence number
 WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
-    DUMMY_CODE(n, isn);
-    return WrappingInt32{0};
+    // DUMMY_CODE(n, isn);
+    auto t = static_cast<uint32_t>(n) + isn.raw_value();
+    return WrappingInt32{t};
 }
 
 //! Transform a WrappingInt32 into an "absolute" 64-bit sequence number (zero-indexed)
@@ -28,7 +33,44 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 //! runs from the local TCPSender to the remote TCPReceiver and has one ISN,
 //! and the other stream runs from the remote TCPSender to the local TCPReceiver and
 //! has a different ISN.
+    // stream   index         0     1     2     3...      X       ... Y    ~ 2^32-1
+    // absolute seq           1     2     3     4...      X+1     ... Y+1
+    // seqno         (SYN)ISN ISN+1 ISN+2 ISN+3 ISN+4...  ISN+X+1 ... ISN+Y+1(FIN)
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
-    DUMMY_CODE(n, isn, checkpoint);
-    return {};
+    // DUMMY_CODE(n, isn, checkpoint);
+    // absseq(32bit) = n-isn if n-isn>0
+    // uint64_t x = 0;
+    // if (isn.raw_value() == 0) {
+    //     x = n.raw_value();
+    // } else {
+    //     x = n.raw_value() % isn.raw_value();
+    // }
+    
+    // if (x == 0) {
+    //     return {x};
+    // }
+    // // 到
+    // uint64_t mask = 0xffffffff;
+    // uint64_t high_bits = (checkpoint & (mask << 32)) >> 32;
+    // uint64_t low_bits = checkpoint & mask;
+
+    // if ((low_bits > x) && ((low_bits - x) > 0xffff)) {
+    //     x = ((high_bits + 1) << 32) + x;
+    // } else if ((x > low_bits) && ((x - low_bits) > 0xffff)) {
+    //     x = ((high_bits - 1) << 32) + x; 
+    // } else {
+    //    x = (high_bits << 32) + x; 
+    // }
+    // return {x};
+
+    uint32_t offset = n.raw_value() - isn.raw_value();
+
+    std::cout << n.raw_value() << " " << isn.raw_value() << " offset : " << offset << std::endl;
+    uint64_t t = (checkpoint & 0xFFFFFFFF00000000) + offset;
+    uint64_t ret = t;
+    if (abs(int64_t(t + (1ul << 32) - checkpoint)) < abs(int64_t(t - checkpoint)))
+        ret = t + (1ul << 32);
+    if (t >= (1ul << 32) && abs(int64_t(t - (1ul << 32) - checkpoint)) < abs(int64_t(ret - checkpoint)))
+        ret = t - (1ul << 32);
+    return ret;
 }
