@@ -50,7 +50,7 @@ bool TCPReceiver::segment_received(const TCPSegment &seg) {
         return true;
     } else if (abs_seqno >= _base + window_size() ||
                 abs_seqno + length <= _base) {
-        if (!ret) { // if fin, accept
+        if (!ret) { // useless, just pass compilation
             return false;
         }
     }
