@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <iostream>
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
@@ -57,7 +58,8 @@ class StreamReassembler {
     bool empty() const;
 
     size_t head_index() const {
-      return _next_index - _output.buffer_size();
+      // std::cout << "_next_index " << _next_index << " _output.buffer_size() " << _output.buffer_size() << std::endl;
+      return _next_index;
     }
     bool input_ended() const { return _output.input_ended(); }
 };

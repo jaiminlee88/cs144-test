@@ -82,12 +82,15 @@ void StreamReassembler::merge_data(const string &data, size_t sindex, size_t ein
     if (_eof_index > 0 && sindex > _eof_index) {
         return;
     }
-    if (_output.buffer_size() + _unassemble_cnt >= _capacity) {
+
+    if (_unassemble_cnt > _capacity) {
+        // cout << "!!!!!!!!" << endl;
         return;
     }
     if (data.size() <= 0 || eindex <= _next_index) {
         return;
     }
+    // cout << "====" << _next_index <<"=================" << data << " " << sindex << " " << eindex << endl;
     if (_m.empty()) { // append head
         if (_next_index < sindex) {
             _unassemble_cnt += data.size();

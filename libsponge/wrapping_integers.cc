@@ -65,7 +65,7 @@ uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
 
     uint32_t offset = n.raw_value() - isn.raw_value();
 
-    std::cout << n.raw_value() << " " << isn.raw_value() << " offset : " << offset << std::endl;
+    // std::cout << n.raw_value() << " " << isn.raw_value() << " offset : " << offset << std::endl;
     uint64_t t = (checkpoint & 0xFFFFFFFF00000000) + offset;
     uint64_t ret = t;
     if (abs(int64_t(t + (1ul << 32) - checkpoint)) < abs(int64_t(t - checkpoint)))
