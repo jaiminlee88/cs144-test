@@ -3,7 +3,7 @@
 #include "tcp_config.hh"
 
 #include <random>
-
+#include <iostream>
 // Dummy implementation of a TCP sender
 
 // For Lab 3, please replace with a real implementation that passes the
@@ -20,7 +20,8 @@ using namespace std;
 TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const std::optional<WrappingInt32> fixed_isn)
     : _isn(fixed_isn.value_or(WrappingInt32{random_device()()}))
     , _initial_retransmission_timeout{retx_timeout}
-    , _stream(capacity) {}
+    , _stream(capacity)
+    , _retransmission_timeout(retx_timeout) {}
 
 uint64_t TCPSender::bytes_in_flight() const { return _bytes_in_flight; }
 
@@ -33,7 +34,7 @@ void TCPSender::fill_window() { // send all data in window
         return;
     }
 
-    size_t win = window_size > 0 ? window_size : 1;
+    size_t win = _window_size > 0 ? _window_size : 1;
     size_t win_remained;
     while (true) {
         win_remained = win - (_next_seqno - _recv_ackno);
@@ -41,9 +42,9 @@ void TCPSender::fill_window() { // send all data in window
             break;
         }
         size_t size = min(TCPConfig::MAX_PAYLOAD_SIZE, win_remained); // seg size control
-        TCPSegments seg;
+        TCPSegment seg;
         string str  = _stream.read(size);
-        seg.playload() = Buffer(std::move(str));
+        seg.payload() = Buffer(std::move(str));
         if (seg.length_in_sequence_space() < win && _stream.eof()) {
             seg.header().fin = true;
             _fin_flag = true;
@@ -75,8 +76,9 @@ bool TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     //pop
     while (!_segments_outstanding.empty()) {
         TCPSegment seg = _segments_outstanding.front();
-        if (unwrap(seg.header.seqno, _isn, _next_seqno)
+        if (unwrap(seg.header().seqno, _isn, _next_seqno)
             + seg.length_in_sequence_space() <= abs_ackno) {
+            _bytes_in_flight -= seg.length_in_sequence_space();
             _segments_outstanding.pop();
         } else {
             break;
@@ -98,7 +100,9 @@ bool TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 void TCPSender::tick(const size_t ms_since_last_tick) { 
     // DUMMY_CODE(ms_since_last_tick);
     _timer += ms_since_last_tick;
+    
     if (_timer >= _retransmission_timeout && !_segments_outstanding.empty()) {
+        // cout << "-------" << _segments_outstanding.size() << endl;
         _segments_out.push(_segments_outstanding.front());
         _consecutive_retransmission++;
         _retransmission_timeout *= 2;
@@ -110,12 +114,24 @@ void TCPSender::tick(const size_t ms_since_last_tick) {
     }
 }
 
-unsigned int TCPSender::consecutive_retransmissions() const { return {}; }
+unsigned int TCPSender::consecutive_retransmissions() const { 
+    return _consecutive_retransmission;
+}
 
-void TCPSender::send_empty_segment() {}
+void TCPSender::send_empty_segment() {
+    TCPSegment seg;
+    seg.header().seqno = wrap(_next_seqno, _isn);
+    _segments_out.push(seg);
+}
+
+void TCPSender::send_empty_segment(WrappingInt32 seqno) {
+    TCPSegment seg;
+    seg.header().seqno = seqno;
+    _segments_out.push(seg);
+}
 
 void TCPSender::send_segment(TCPSegment &seg) {
-    seg.header().seqno = WrappingInt32(_next_seqno, _isn);
+    seg.header().seqno = wrap(_next_seqno, _isn);
     _next_seqno += seg.length_in_sequence_space();
     _bytes_in_flight += seg.length_in_sequence_space();
     _segments_outstanding.push(seg);
