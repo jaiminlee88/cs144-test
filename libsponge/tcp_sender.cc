@@ -43,7 +43,7 @@ void TCPSender::fill_window() { // send all data in window
         }
         size_t size = min(TCPConfig::MAX_PAYLOAD_SIZE, win_remained); // seg size control
         TCPSegment seg;
-        string str  = _stream.read(size);
+        string str  = _stream.read(size); // the socket write in
         seg.payload() = Buffer(std::move(str));
         if (seg.length_in_sequence_space() < win && _stream.eof()) {
             seg.header().fin = true;
