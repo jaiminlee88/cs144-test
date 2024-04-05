@@ -22,62 +22,74 @@ ByteStream::ByteStream(const size_t capacity) :
     _read_bytes(0),
     _write_bytes(0),
     _input_ended(false),
-    _q{}
+    _q{},
+    _buffer{}
     { 
     // DUMMY_CODE(capacity);
 }
 
 size_t ByteStream::write(const string &data) {
     // DUMMY_CODE(data);
-    if (input_ended()) {
-        return 0;
-    }
-    size_t size = min(remaining_capacity(), data.size());
-    if (size == 0) {
-        return 0;
-    }
-    for (size_t i = 0; i < size; ++i) {
-        _q.push_back(data[i]);
-        ++_write_bytes;
-    }
-    return size;
+    // if (input_ended()) {
+    //     return 0;
+    // }
+    // size_t size = min(remaining_capacity(), data.size());
+    // if (size == 0) {
+    //     return 0;
+    // }
+    // for (size_t i = 0; i < size; ++i) {
+    //     _q.push_back(data[i]);
+    //     ++_write_bytes;
+    // }
+    // return size;
+    size_t len = data.length() <= (_capacity - _buffer.size()) ? data.length() : _capacity - _buffer.size();
+    _buffer.append(BufferList(std::move(string().assign(data.begin(), data.begin() + len))));
+    _write_bytes += len;
+    return len;
 }
 
 //! \param[in] len bytes will be copied from the output side of the buffer
 string ByteStream::peek_output(const size_t len) const {
-    // DUMMY_CODE(len);
-    size_t size = min(buffer_size(), len);
-    if (size <= 0) {
-        return {};
-    }
-    string s;
-    for (size_t i = 0; i < size; ++i) {
-        s.append(1, _q[i]);
-    }
-    return s;
+    // // DUMMY_CODE(len);
+    // size_t size = min(buffer_size(), len);
+    // if (size <= 0) {
+    //     return {};
+    // }
+    // string s;
+    // for (size_t i = 0; i < size; ++i) {
+    //     s.append(1, _q[i]);
+    // }
+    // return s;
+    size_t length = len > _buffer.size() ? _buffer.size() : len;
+    string s = _buffer.concatenate();
+    return string().assign(s.begin(), s.begin() + length);
 }
 
 //! \param[in] len bytes will be removed from the output side of the buffer
 void ByteStream::pop_output(const size_t len) {
-    // DUMMY_CODE(len);
-    size_t size = min(buffer_size(), len);
-    if (size <= 0) {
-        return;
-    }
-    for (size_t i = 0; i < size; ++i) {
-        _q.pop_front();
-        ++_read_bytes;
-    }
+    // // DUMMY_CODE(len);
+    // size_t size = min(buffer_size(), len);
+    // if (size <= 0) {
+    //     return;
+    // }
+    // for (size_t i = 0; i < size; ++i) {
+    //     _q.pop_front();
+    //     ++_read_bytes;
+    // }
+    size_t length = len > _buffer.size() ? _buffer.size() : len;
+    _read_bytes += length;
+    _buffer.remove_prefix(length);
 }
 
 void ByteStream::end_input() { _input_ended = true; }
 
 bool ByteStream::input_ended() const { return _input_ended; }
 
-size_t ByteStream::buffer_size() const { return _q.size(); }
+// size_t ByteStream::buffer_size() const { return _q.size(); }
+size_t ByteStream::buffer_size() const { return _buffer.size(); }
 
-bool ByteStream::buffer_empty() const { 
-    return _q.empty(); }
+// bool ByteStream::buffer_empty() const { return _q.empty(); }
+bool ByteStream::buffer_empty() const { return _buffer.size() == 0; }
 
 bool ByteStream::eof() const { return _input_ended && buffer_size() == 0; }
 
@@ -85,4 +97,5 @@ size_t ByteStream::bytes_written() const { return _write_bytes; }
 
 size_t ByteStream::bytes_read() const { return _read_bytes; }
 
-size_t ByteStream::remaining_capacity() const { return _capacity - _q.size(); }
+// size_t ByteStream::remaining_capacity() const { return _capacity - _q.size(); }
+size_t ByteStream::remaining_capacity() const { return _capacity - _buffer.size(); }

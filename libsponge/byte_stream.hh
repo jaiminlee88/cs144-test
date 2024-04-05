@@ -7,6 +7,7 @@
 #include <list>
 #include <string>
 #include <utility>
+#include "util/buffer.hh"
 
 //! \brief An in-order byte stream.
 
@@ -23,6 +24,7 @@ class ByteStream {
     size_t _write_bytes{0};
     bool _input_ended{false};
     std::deque<char> _q;
+    BufferList _buffer = {};
 
   public:
     //! Construct a stream with room for `capacity` bytes.
