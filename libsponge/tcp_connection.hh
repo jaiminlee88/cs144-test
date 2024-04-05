@@ -22,6 +22,16 @@ class TCPConnection {
     bool _linger_after_streams_finish{true};
 
     size_t _time_since_last_segment_received{0};
+    bool _active{true};
+    bool _need_send_rst{false};
+    bool _ask_for_fin_sent{false};
+
+    bool push_segments_out(bool send_syn = false);
+    void unclean_shutdown(bool send_rst);
+    bool clean_shutdown();
+    bool in_listen();
+    bool in_syn_recv();
+    bool in_syn_sent();
     
   public:
     //! \name "Input" interface for the writer

@@ -25,12 +25,14 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
 
 uint64_t TCPSender::bytes_in_flight() const { return _bytes_in_flight; }
 
-void TCPSender::fill_window() { // send all data in window
+void TCPSender::fill_window(bool send_syn) { // send all data in window
     if (!_syn_flag) {
-        TCPSegment seg;
-        seg.header().syn = true;
-        send_segment(seg);
-        _syn_flag = true;
+        if (send_syn) {
+            TCPSegment seg;
+            seg.header().syn = true;
+            send_segment(seg);
+            _syn_flag = true;
+        }
         return;
     }
 
@@ -73,7 +75,7 @@ bool TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     }
     _recv_ackno = abs_ackno;
 
-    //pop
+    //pop pending segments
     while (!_segments_outstanding.empty()) {
         TCPSegment seg = _segments_outstanding.front();
         if (unwrap(seg.header().seqno, _isn, _next_seqno)
