@@ -42,10 +42,10 @@ void Router::route_one_datagram(InternetDatagram &dgram) {
     uint32_t dst_ip = dgram.header().dst;
     for (size_t i = 0; i < _route_list.size(); i++) {
         if (prefix_equal(dst_ip, _route_list[i].route_prefix, _route_list[i].prefix_length)) {
-            if (!route_found || item.prefix_length < _route_list[i].prefix_length) {
+            // if (!route_found || item.prefix_length < _route_list[i].prefix_length) {
                 item = _route_list[i];
                 route_found = true;
-            }
+            // }
         }
     }
     if (route_found == false) {
@@ -56,7 +56,7 @@ void Router::route_one_datagram(InternetDatagram &dgram) {
     }
     dgram.header().ttl--;
     if (item.next_hop.has_value()) {
-        _interfaces[item.interface_num].send_datagram(dgram, item.next_hop.value());
+        _interfaces[item.interface_num].send_datagram(dgram, item.next_hop.value()); //  target interface
     } else {
         _interfaces[item.interface_num].send_datagram(dgram, Address::from_ipv4_numeric(dgram.header().dst));
     }

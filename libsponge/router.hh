@@ -29,8 +29,8 @@ class AsyncNetworkInterface : public NetworkInterface {
     //!
     //! \param[in] frame the incoming Ethernet frame
     void recv_frame(const EthernetFrame &frame) {
-        auto optional_dgram = NetworkInterface::recv_frame(frame);
-        if (optional_dgram.has_value()) {
+        auto optional_dgram = NetworkInterface::recv_frame(frame); // decode data or arp
+        if (optional_dgram.has_value()) { // data
             _datagrams_out.push(std::move(optional_dgram.value()));
         }
     };
